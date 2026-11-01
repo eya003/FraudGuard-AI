@@ -1,0 +1,14 @@
+.git
+.venv
+__pycache__
+*.pyc
+.env
+data/uploads/
+data/experiments/
+data/dataset/
+data/kaggle_reference_v2/
+data/reference_predictions_v2.csv
+data/*.sqlite3*
+*.zip
+*.ipynb
+.gitignore

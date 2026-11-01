@@ -1,0 +1,23 @@
+.venv/
+__pycache__/
+*.py[cod]
+.env
+data/uploads/*
+!data/uploads/.gitkeep
+data/experiments/*
+!data/experiments/.gitkeep
+data/*.sqlite3
+data/*.sqlite3-*
+.streamlit/secrets.toml
+# Never publish transaction records or test exports.
+data/dataset/
+data/kaggle_reference_v2/
+data/reference_predictions_v2.csv
+data/experiments/
+data/uploads/
+data/**/*.csv
+*.zip
+# Duplicate of the canonical models/random_forest_pipeline_v2.joblib
+/random_forest_pipeline_v2.joblib
+.pytest_cache/
+.DS_Store

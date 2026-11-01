@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#081523">
+<meta name="description" content="FraudGuard AI — plateforme académique de détection de fraude explicable, EDA, laboratoire ML, simulations métier et SHAP.">
+<title>FraudGuard AI — Explainable Fraud Intelligence</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+:root{--bg:#071421;--panel:#102335;--line:#2a4554;--text:#eff9fa;--muted:#a3bbca;--mint:#66e2cd;--gold:#f2ba84;--width:1110px}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse 60% 20% at 82% -5%,#184f59 0,transparent 90%),var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;line-height:1.7}
+a{color:var(--mint);text-decoration:none}a:hover{text-decoration:underline}header,main,footer{max-width:var(--width);margin:auto;padding-left:26px;padding-right:26px}
+header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding-top:23px;padding-bottom:23px;border-bottom:1px solid var(--line)}.logo{font:800 1.35rem Manrope;letter-spacing:-.05em}.logo span{color:var(--mint)}nav{display:flex;gap:20px;flex-wrap:wrap}nav a{color:var(--muted);font-size:.88rem}
+.hero{padding:110px 0 84px;max-width:930px}.eyebrow{color:var(--mint);font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.18em}.hero h1{font:800 clamp(2.5rem,6vw,5.2rem)/1.11 Manrope;letter-spacing:-.072em;margin:18px 0 22px}.hero h1 em{color:var(--mint);font-style:normal}.lead{font-size:1.16rem;color:#b7cbd6;max-width:740px}.buttons{display:flex;gap:12px;flex-wrap:wrap;margin:28px 0 0}.btn{padding:12px 21px;border-radius:11px;border:1px solid var(--line);color:var(--text);font-weight:750}.btn.primary{background:var(--mint);color:#08242a;border-color:var(--mint)}.btn.disabled{color:#8a9eaf;opacity:.65;cursor:not-allowed}.note{font-size:.8rem;color:#8ca4b7;margin:15px 0 0}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:90px}.metric{background:linear-gradient(145deg,#132d40,#0e2033);padding:24px 22px;border-radius:16px;border:1px solid var(--line)}.metric .number{display:block;font:800 1.8rem Manrope;letter-spacing:-.04em}.metric .label{display:block;color:var(--muted);font-size:.8rem;margin-top:4px}
+section{margin:90px 0}h2{font:800 clamp(1.7rem,3vw,2.4rem) Manrope;letter-spacing:-.04em;margin:0 0 14px}.intro{color:var(--muted);max-width:670px;margin:0 0 27px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}.tile{padding:26px;border:1px solid var(--line);background:var(--panel);border-radius:18px}.tile .number{color:var(--gold);font-size:.77rem;letter-spacing:.16em;font-weight:800}.tile h3{font:750 1.06rem Manrope;margin:10px 0 5px}.tile p{color:var(--muted);font-size:.9rem;margin:0}
+.pipeline{padding:26px;border:1px solid var(--line);background:#0c1e2d;border-radius:17px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}.step{padding:11px 16px;background:#163449;border-radius:11px;font-weight:700;font-size:.83rem}.arrow{color:var(--mint);font-weight:800}
+.links{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}.link{padding:22px;border-radius:15px;background:var(--panel);border:1px solid var(--line)}.link h3{margin:0 0 7px;font:800 1rem Manrope}.link p{font-size:.84rem;color:var(--muted);margin:0}.link a{display:inline-block;margin-top:9px;font-size:.86rem;font-weight:800}
+footer{padding-top:33px;padding-bottom:65px;border-top:1px solid var(--line);font-size:.84rem;color:var(--muted)}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.metrics{grid-template-columns:repeat(2,1fr)}.hero{padding:75px 0 58px}}
+@media(max-width:570px){header{align-items:flex-start;flex-direction:column}nav{gap:12px}.grid,.links{grid-template-columns:1fr}.metrics{gap:8px}.metric{padding:15px}.metric .number{font-size:1.35rem}.pipeline{gap:6px}.step{width:100%}.arrow{display:none}}
+</style>
+</head>
+<body>
+<header><div class="logo">◈ FRAUDGUARD <span>AI</span></div><nav><a href="#experience">Expérience</a><a href="#method">Méthodologie</a><a href="#resources">Ressources</a></nav></header>
+<main>
+<div class="hero"><div class="eyebrow">FINANCIAL RISK · EXPLAINABLE AI · ENSI 2026–2027</div>
+<h1>From transaction data<br>to <em>explainable decisions.</em></h1>
+<p class="lead">FraudGuard AI est une plateforme interactive de détection de fraude qui relie exploration de données, apprentissage automatique, simulations des coûts métier et explication des alertes.</p>
+<div class="buttons"><a class="btn primary" id="demoLink" href="#resources">Ouvrir la plateforme</a><a class="btn" id="sourceLink" href="#resources">Voir le code source</a></div>
+<p class="note">Projet académique basé sur des transactions Sparkov synthétiques. Aucun usage bancaire réel n'est revendiqué.</p></div>
+<div class="metrics" aria-label="Résultats historiques du notebook V2">
+<div class="metric"><span class="number">1,85 M</span><span class="label">Transactions étudiées</span></div><div class="metric"><span class="number">0,8853</span><span class="label">PR-AUC · Test V2</span></div><div class="metric"><span class="number">84,58 %</span><span class="label">Rappel · Test V2</span></div><div class="metric"><span class="number">30 / jour</span><span class="label">Budget d'alertes validé</span></div></div>
+<section id="experience"><div class="eyebrow">L'APPLICATION</div><h2>Un laboratoire et un moteur de décision.</h2><p class="intro">Toutes les étapes clés de l'étude sont reliées dans un même espace Streamlit, avec une API FastAPI et des expériences ML enregistrées indépendamment.</p>
+<div class="grid"><div class="tile"><span class="number">01 / DATA</span><h3>Dashboard & EDA</h3><p>Montants, tendances, catégories, caractéristiques temporelles, distributions et exploration par filtres.</p></div>
+<div class="tile"><span class="number">02 / MODELS</span><h3>ML Laboratory</h3><p>Entraînements Train/Validation, hyperparamètres ajustables, Logistic Regression, RF, XGBoost, Isolation Forest et Autoencoder.</p></div>
+<div class="tile"><span class="number">03 / EVALUATION</span><h3>Model Comparison</h3><p>PR-AUC, ROC-AUC, métriques et comparaisons identifiées par modèle, partition et provenance.</p></div>
+<div class="tile"><span class="number">04 / STRATEGY</span><h3>Risk Simulator</h3><p>Scénarios seuil/budget, coût d'alertes, fraudes manquées et contraintes chronologiques.</p></div>
+<div class="tile"><span class="number">05 / LIVE</span><h3>Transaction Tester</h3><p>Prédiction de référence V2 ou expérience enregistrée, sans modifier la politique opérationnelle.</p></div>
+<div class="tile"><span class="number">06 / TRUST</span><h3>Alert Center & XAI</h3><p>Quotas quotidiens atomiques, suivi des alertes et facteurs explicatifs SHAP.</p></div></div></section>
+<section id="method"><div class="eyebrow">MÉTHODOLOGIE</div><h2>Évaluation sans fuite temporelle.</h2><p class="intro">Le protocole distingue les décisions scientifiques des opérations : données Train pour apprendre, Validation pour sélectionner, Test figé pour le bilan final.</p>
+<div class="pipeline"><span class="step">Transactions brutes</span><span class="arrow">→</span><span class="step">15 features causales</span><span class="arrow">→</span><span class="step">Train 60 % / Val 20 %</span><span class="arrow">→</span><span class="step">Coût métier</span><span class="arrow">→</span><span class="step">RF V2 figé</span></div>
+<p class="note">Seuil de référence : 0,22266507475921693. Scores non calibrés comme probabilités. Les modèles expérimentaux ne remplacent pas automatiquement le modèle V2.</p></section>
+<section id="resources"><div class="eyebrow">RESSOURCES</div><h2>Documentation, code et démonstration.</h2><p class="intro">Les liens du projet sont renseignés à sa publication ; aucune adresse de déploiement non vérifiée n'est présentée.</p>
+<div class="links">
+<div class="link"><h3>Application Streamlit</h3><p>La plateforme interactive et ses huit espaces de travail.</p><a id="resourceDemo">Lien à configurer</a></div>
+<div class="link"><h3>Repository GitHub</h3><p>Sources FastAPI/Streamlit, scripts Kaggle et tests.</p><a id="resourceRepo">Lien à configurer</a></div>
+<div class="link"><h3>Notebook / étude complète</h3><p>Expériences d'origine et protocole de validation.</p><a id="resourceNotebook">Lien à configurer</a></div>
+<div class="link"><h3>Dataset synthétique</h3><p>Source et informations sur les transactions Sparkov.</p><a id="resourceDataset">Lien à configurer</a></div>
+</div></section>
+</main><footer>◈ FRAUDGUARD AI · ENSI · Projet académique de Data Mining · Données synthétiques · © 2026</footer>
+<script>
+/* After deployment, replace these empty values with the actual, verified URLs. */
+const LINKS={demo:'',repo:'',notebook:'',dataset:''};
+function attach(id,url){const a=document.getElementById(id);if(!a)return;
+ if(/^https?:\/\//.test(url)){a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Consulter ↗';}
+ else{a.removeAttribute('href');a.setAttribute('aria-disabled','true');}}
+attach('resourceDemo',LINKS.demo);attach('resourceRepo',LINKS.repo);
+attach('resourceNotebook',LINKS.notebook);attach('resourceDataset',LINKS.dataset);
+if(LINKS.demo)attach('demoLink',LINKS.demo);
+if(LINKS.repo)attach('sourceLink',LINKS.repo);
+</script>
+</body></html>

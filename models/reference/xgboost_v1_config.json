@@ -1,0 +1,46 @@
+{
+    "model": "XGBoost",
+    "version": "V1",
+    "threshold": 0.02,
+    "daily_alert_budget": 30,
+    "cost_per_alert": 5,
+    "alert_mode": "end_of_day_batch",
+    "features": [
+        "amt",
+        "city_pop",
+        "hour_sin",
+        "hour_cos",
+        "day_of_week",
+        "is_weekend",
+        "time_since_last_tx",
+        "has_previous_tx",
+        "tx_count_1h",
+        "tx_count_24h",
+        "tx_count_30d",
+        "avg_amount_30d",
+        "amount_ratio_30d",
+        "distance_km",
+        "category"
+    ],
+    "hyperparameters": {
+        "n_estimators": 450,
+        "max_depth": 8,
+        "learning_rate": 0.03,
+        "subsample": 1.0,
+        "colsample_bytree": 1.0,
+        "min_child_weight": 1
+    },
+    "test_results": {
+        "PR_AUC": 0.9074,
+        "ROC_AUC": 0.9983,
+        "Precision": 0.4256,
+        "Recall": 0.9325,
+        "F2": 0.7531,
+        "MCC": 0.6282,
+        "Total_Cost": 43105.04
+    },
+    "versions": {
+        "sklearn": "1.6.1",
+        "xgboost": "3.4.1"
+    }
+}
