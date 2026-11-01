@@ -8,7 +8,7 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 
 
 def get_health() -> dict:
-    response = requests.get(f"{API_BASE_URL}/health", timeout=3)
+    response = requests.get(f"{API_BASE_URL}/health", timeout=90)
     response.raise_for_status()
     return response.json()
 

@@ -15,8 +15,8 @@ try:
     health = get_health()
     imports = get_imports()
     alert_summary = get_alert_summary()
-except (requests.RequestException, ValueError):
-    st.error("FastAPI est indisponible. Démarrez-la avec uvicorn backend.main:app --reload.")
+except (requests.RequestException, ValueError) as exc:
+    st.error(f"Erreur de connexion API : {exc}")
     st.stop()
 
 selected = None
