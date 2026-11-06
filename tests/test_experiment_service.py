@@ -56,5 +56,22 @@ class ExperimentServiceTest(unittest.TestCase):
             exp.start_experiment(self.imported["id"], algorithm="invalid", params={},
                 class_weight="none", sample_limit=100, threshold=0.5)
 
+    def test_public_training_queue_accepts_only_one_active_job(self):
+        with patch.object(exp._executor, "submit"):
+            first = exp.start_experiment(self.imported["id"], algorithm="logistic_regression",
+                params={"max_iter": 100}, class_weight="none", sample_limit=100, threshold=0.5)
+            self.assertEqual(first["status"], "queued")
+            with self.assertRaisesRegex(ValueError, "déjà en cours"):
+                exp.start_experiment(self.imported["id"], algorithm="logistic_regression",
+                    params={"max_iter": 100}, class_weight="none", sample_limit=100, threshold=0.5)
+
+    def test_public_training_limits_sample_and_estimator_count(self):
+        with self.assertRaisesRegex(ValueError, "100,000"):
+            exp.start_experiment(self.imported["id"], algorithm="logistic_regression",
+                params={}, class_weight="none", sample_limit=500_000, threshold=0.5)
+        with self.assertRaisesRegex(ValueError, "10 et 300"):
+            exp.start_experiment(self.imported["id"], algorithm="random_forest",
+                params={"n_estimators": 301}, class_weight="none", sample_limit=100, threshold=0.5)
+
 
 if __name__ == "__main__": unittest.main()

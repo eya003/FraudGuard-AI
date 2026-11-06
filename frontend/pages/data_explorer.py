@@ -2,7 +2,9 @@ import pandas as pd
 import streamlit as st
 import requests
 
-from frontend.api_client import get_import_summary, get_import_table, get_imports, get_feature_profile
+from frontend.api_client import (get_import_summary, get_import_table, get_imports,
+                                 get_feature_profile, get_public_demo_summary)
+from frontend.public_demo import render_public_explorer
 
 try:
     import plotly.express as px
@@ -33,11 +35,14 @@ st.caption("Exploration paginée des CSV importés. Le backend lit les fichiers 
 try:
     imports = get_imports()
 except requests.RequestException:
-    st.error("FastAPI est indisponible. Démarrez le backend et réessayez.")
+    st.error("Le service de données est temporairement indisponible.")
     st.stop()
 
 if not imports:
-    st.info("Aucun fichier n'a été importé. Utilisez d'abord « Importer des transactions ».")
+    try:
+        render_public_explorer(get_public_demo_summary())
+    except (ValueError, requests.RequestException) as exc:
+        st.info(f"Aucun CSV ni échantillon Sparkov disponible : {exc}")
     st.stop()
 
 selected = st.selectbox(

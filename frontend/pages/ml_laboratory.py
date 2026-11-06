@@ -24,8 +24,8 @@ with st.container():
     alg = st.selectbox("Algorithme", ["random_forest", "logistic_regression", "xgboost", "isolation_forest", "autoencoder"],
         format_func=lambda x: {"random_forest":"Random Forest", "logistic_regression":"Régression logistique", "xgboost":"XGBoost", "isolation_forest":"Isolation Forest (anomalies)", "autoencoder":"Autoencoder (reconstruction)"}[x])
     c1,c2,c3 = st.columns(3)
-    n = c1.number_input("Estimateurs", min_value=10, max_value=600, value=100, step=10, disabled=alg in {"logistic_regression", "autoencoder"})
-    depth = c2.number_input("Profondeur max (0 = illimitée)", min_value=0, max_value=64, value=12, disabled=alg in {"logistic_regression", "autoencoder"})
+    n = c1.number_input("Estimateurs", min_value=10, max_value=300, value=100, step=10, disabled=alg in {"logistic_regression", "autoencoder"})
+    depth = c2.number_input("Profondeur max (0 = illimitée)", min_value=0, max_value=24, value=12, disabled=alg in {"logistic_regression", "autoencoder"})
     C = c3.number_input("C (LR) / scale_pos_weight (XGBoost)", min_value=0.001, max_value=100.0, value=1.0, disabled=alg in {"random_forest", "isolation_forest", "autoencoder"})
     if alg == "random_forest":
         leaf = st.slider("min_samples_leaf · Random Forest", 1, 20, 5)
@@ -38,7 +38,7 @@ with st.container():
         min_child_weight = st.slider("min_child_weight · XGBoost", 1, 20, 5)
         reg_lambda = st.number_input("reg_lambda · XGBoost", min_value=0.0, value=1.0, step=0.5)
     if alg == "autoencoder":
-        ae_iter = st.slider("Nombre maximal d'itérations · Autoencoder", 10, 100, 35, 5)
+        ae_iter = st.slider("Nombre maximal d'itérations · Autoencoder", 5, 50, 35, 5)
     feature_groups = {
         "Toutes les 15 features": [],
         "Sans distance": ["distance_km"],
@@ -51,7 +51,7 @@ with st.container():
                             disabled=alg in {"isolation_forest", "autoencoder"})
     weight_options = ["none"] if alg in {"xgboost", "isolation_forest", "autoencoder"} else ["balanced", "none"] + (["balanced_subsample"] if alg == "random_forest" else [])
     weight = st.selectbox("Pondération des classes", weight_options)
-    sample = st.select_slider("Taille max de l'échantillon Train", options=[1000, 5000, 20000, 50000, 100000, 500000], value=20000)
+    sample = st.select_slider("Taille max de l'échantillon Train", options=[1000, 5000, 20000, 50000, 100000], value=20000)
     smotenc = st.checkbox("SMOTENC sur Train uniquement", value=False, disabled=alg in {"xgboost", "isolation_forest", "autoencoder"})
     cv = st.selectbox("Recherche TimeSeriesSplit (Random Forest)", [0, 3, 5], format_func=lambda x: "Désactivée" if x == 0 else f"{x} folds", disabled=alg != "random_forest")
     if alg in {"isolation_forest", "autoencoder"}:

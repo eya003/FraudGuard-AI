@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+import gzip
 from pathlib import Path
 from unittest.mock import patch
 
@@ -68,6 +69,13 @@ class StreamingImportExplorerTest(unittest.TestCase):
     def test_import_rejects_csv_without_a_supported_amount_column(self):
         with self.assertRaisesRegex(import_service.ImportError, "Colonne de montant"):
             import_service.save_csv("bad.csv", b"foo,bar\n1,2\n")
+
+    def test_gzip_csv_export_is_streamed_and_readable(self):
+        content = gzip.compress(CSV.encode("utf-8"))
+        item = import_service.save_csv("validation.csv.gz", content)
+        self.assertEqual(item["row_count"], 3)
+        summary = import_service.summarize_import(item["id"])
+        self.assertEqual(summary["fraud_labels"]["fraud_count"], 1)
 
 
 if __name__ == "__main__":

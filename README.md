@@ -26,16 +26,15 @@ Ces résultats sont conservés dans `models/config.json` ; aucune expérience su
 
 | Page | Ce qui fonctionne | Ce qui doit être fourni |
 | --- | --- | --- |
-| **Dashboard** | KPIs, évolution temporelle, catégories, heures et état API depuis les imports réels | Dataset CSV pour les statistiques |
-| **Data Explorer** | Filtres, pagination, qualité, agrégats, profils histogrammes des 15 features | CSV brut et, pour les features, export Kaggle |
+| **Dashboard** | Agrégats exacts Sparkov, graphiques mensuels, horaires, catégories, montants et distances | Aucune importation pour le mode public |
+| **Data Explorer** | Agrégats complets, filtres interactifs sur un échantillon réel et profils histogrammes des 15 features | Export Kaggle pour les features historiques V2 |
 | **Importer des données** | Import CSV en flux côté FastAPI, métadonnées et accès par ligne | CSV local ou `DATASET_PATH` |
 | **ML Laboratory** | Logistic Regression, RF, XGBoost, Isolation Forest, Autoencoder ; réglage d'hyperparamètres, pondération/SMOTENC adaptés, CV RF, entraînement non bloquant | `fraudguard_train_val_features_v2.csv` (Train+Validation uniquement) |
 | **Model Comparison** | Références historiques disponibles et expériences réelles, courbes PR et matrices Validation si calculées | Scores/artefacts historiques supplémentaires pour les modèles anciens |
-| **Risk Simulator** | Temps réel chronologique ou batch Top-k, seuil, budget, coût, métriques et courbes | `fraudguard_v2_validation_scores.csv` |
+| **Risk Simulator** | Temps réel chronologique ou batch Top-k, seuil, budget, coût, métriques et courbes | `fraudguard_v2_validation_scores.csv` (RF) ou `fraudguard_v2_validation_model_scores.csv.gz` (tous les modèles) |
 | **Transaction Tester** | Transaction brute ou CSV ; score RF V2 par défaut ou modèle expérimental ; preview / record opérationnel | Transaction brute complète et historique correspondant |
 | **Alert Center** | Limite de 30 alertes/jour, états et suivi SQLite atomique | Transactions effectivement enregistrées en mode record |
 | **Explainable AI** | Importance RF V2, score et contributions SHAP locales si installé | `shap`, historique cohérent |
-| **À propos & liens** | Présentation, méthodologie, données historiques et liens vers code/démo/notebook/dataset | URLs réelles à renseigner |
 
 **Limitations méthodologiques :** les expériences non supervisées s'ajustent sur les transactions normales de Train et donnent un *rang d'anomalie* par rapport à la distribution Train (pas une probabilité de fraude). Les labels Validation servent seulement à évaluer leurs résultats. Un modèle expérimental est sélectionnable en **preview uniquement** et ne crée jamais d'alerte opérationnelle. Les comparaisons historiques V1/V2 doivent afficher leur protocole/partition ; ne pas les traiter comme équivalentes sans vérification.
 
@@ -66,11 +65,12 @@ Démarrer dans **deux terminaux** depuis la racine :
 
 ## Brancher les données Kaggle V2
 
-Le dataset complet n'est **pas inclus** dans ce dépôt : il ne doit pas être commité dans Git avec les secrets, les historiques et les fichiers SQLite.
+Le CSV complet n'est **pas inclus** dans ce dépôt. `data/public_demo/summary.json` contient des agrégats exacts calculés sur les 1 852 394 lignes et `sample.csv.gz` un échantillon déterministe réel (8 000 lignes) aux identifiants de carte pseudonymisés. Les KPI sont calculés sur l'ensemble du CSV; le tableau Data Explorer utilise seulement l'échantillon. Le CSV brut ne fournit pas de partition Train/Validation/Test ni les features historiques calculées.
 
-1. Déposer une copie autorisée du dataset CSV Sparkov complet sous `data/dataset/sparkov_transactions.csv`, ou renseigner `DATASET_PATH` dans `.env` pointant vers le vrai fichier. Au premier appel à la liste des imports, le backend l'enregistre automatiquement (contrôle des colonnes / comptages par blocs), sans devoir l'envoyer via le navigateur. L'import initial d'un gros fichier peut prendre un certain temps.
+1. Pour recalculer les artefacts de démonstration après modification du CSV, exécuter `python scripts/export_public_dataset.py <CSV> --output data/public_demo`. Le backend détecte automatiquement un CSV local via `DATASET_PATH` au démarrage; la démo hébergée utilise les petits agrégats embarqués et n'a pas besoin du fichier brut.
 2. Dans le notebook Kaggle V2, exécuter le contenu de `docs/kaggle_export_training_data_v2.py` lorsque `history_df` et `features` sont prêts. Télécharger **`fraudguard_train_val_features_v2.csv`**. Ce fichier contient Train, Validation, les **15 features**, `is_fraud`, `_split`, et l'horodatage (pas Test).
-3. Exécuter `docs/kaggle_export_validation_scores_v2.py` avec le modèle final et ses arrays Validation accessibles. Télécharger **`fraudguard_v2_validation_scores.csv`** (date, montant, label, score, partition Validation).
+3. Pour le Risk Simulator RF, exécuter `docs/kaggle_export_validation_scores_v2.py` et télécharger **`fraudguard_v2_validation_scores.csv`**.
+4. Pour les scores comparatifs de tous les modèles, exécuter `docs/kaggle_export_validation_comparison_v2.py` après les cellules V2 jusqu'à 50. Télécharger **`fraudguard_v2_validation_model_scores.csv.gz`** (Validation uniquement). Pour la référence SHAP XGBoost groupée, exécuter `docs/kaggle_export_xgb_shap_reference_v2.py` et télécharger **`fraudguard_v2_xgb_shap_validation_sample.csv.gz`**.
 4. Importer ces CSV dans « Importer des données » ou les enregistrer dans l'espace de données local. Le laboratoire et le simulateur ne produiront pas de métriques inventées tant qu'ils ne sont pas présents.
 5. Si les fichiers Kaggle de parité `feature_history_v2.csv` et `feature_reference_v2.csv` ont été sauvegardés localement, les placer dans `data/kaggle_reference_v2/` pour le test reproductible.
 
@@ -78,11 +78,11 @@ Le système de Feature Engineering conserve la **causalité stricte** (transacti
 
 ## GitHub, portfolio et déploiement
 
-Consulter **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** pour GitHub, Docker, Render/Railway, volumes persistants, mot de passe de démonstration et vérifications de sécurité. La vitrine statique professionnelle prête pour GitHub Pages se trouve dans **[docs/index.html](docs/index.html)** ; la page « À propos & liens » est intégrée à l'interface Streamlit.
+Consulter **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** pour GitHub, Streamlit Community Cloud et Render. La vitrine statique prête pour GitHub Pages reste dans **[docs/index.html](docs/index.html)**; elle n'est pas une page de l'application.
 
-Déployer le **Dockerfile complet** : un seul conteneur expose Streamlit sur `$PORT`, tandis que FastAPI n'écoute qu'en interne sur `127.0.0.1:8000`. Le projet ne fournit pas d'hébergement public automatiquement : il faut créer le dépôt et configurer le service chez l'hébergeur, puis renseigner les vraies URL de publication.
+Le guide décrit Streamlit Community Cloud et Render séparément. Sur Render Free, le disque est éphémère : uploads, modèles expérimentaux, alertes et SQLite ne sont pas durables. La politique opérationnelle de 30 alertes/jour ne doit pas être utilisée comme un quota persistant sur ce plan.
 
-Pour la sécurité, renseigner `APP_ACCESS_PASSWORD` si la démo est publique ; le prototype n'intègre ni authentification bancaire ni autorisation multi-utilisateur. Les volumes SQLite/CSV doivent être conservés hors du repo.
+L'application ne demande pas de connexion. Les jobs du laboratoire sont sérialisés et limités à 100 000 lignes Train; les uploads sont limités à 25 Mo par défaut. Ces limites réduisent les abus et l'usage mémoire mais ne remplacent pas une infrastructure de production durable.
 
 ## Tests
 

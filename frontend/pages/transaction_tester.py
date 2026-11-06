@@ -141,7 +141,7 @@ else:
     try:
         imports = get_imports()
     except requests.RequestException:
-        st.error("FastAPI est indisponible. Démarrez le backend puis réessayez.")
+        st.error("Le service d'analyse est temporairement indisponible.")
         imports = []
     if not imports:
         st.info("Aucun CSV importé n'est disponible. Utilisez d'abord la page Importer des transactions.")
@@ -174,7 +174,7 @@ else:
                 st.session_state.pop("fg_transaction", None)
                 st.error(str(exc))
             except requests.RequestException:
-                st.error("FastAPI est indisponible. Démarrez le backend puis réessayez.")
+                st.error("Le service d'analyse est temporairement indisponible.")
 
     transaction = st.session_state.get("fg_transaction")
     if transaction:

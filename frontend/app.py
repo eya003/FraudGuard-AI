@@ -1,8 +1,6 @@
 """FraudGuard AI — unified, multi-page Streamlit entry point."""
 from __future__ import annotations
 
-import hmac
-import os
 import sys
 from pathlib import Path
 
@@ -17,20 +15,6 @@ from frontend.theme import apply_theme, hero
 st.set_page_config(page_title="FraudGuard AI | Risk Intelligence", page_icon="🛡️", layout="wide",
                    initial_sidebar_state="expanded")
 apply_theme()
-
-# Recommended for public demo deployments: optional password protection at UI layer.
-password = os.getenv("APP_ACCESS_PASSWORD", "")
-if password:
-    if not st.session_state.get("fg_authenticated", False):
-        st.markdown("## Accès à FraudGuard AI")
-        attempt = st.text_input("Mot de passe de démonstration", type="password")
-        if st.button("Accéder à la plateforme", type="primary"):
-            if hmac.compare_digest(attempt, password):
-                st.session_state["fg_authenticated"] = True
-                st.rerun()
-            else:
-                st.error("Mot de passe incorrect.")
-        st.stop()
 
 hero()
 pages = {
@@ -49,7 +33,6 @@ pages = {
         st.Page("pages/alert_center.py", title="Alert Center", icon="🚨"),
         st.Page("pages/explainability.py", title="Explainable AI", icon="💡"),
     ],
-    "04 · PROJET": [st.Page("pages/about.py", title="À propos & liens", icon="🔗")],
 }
 with st.sidebar:
     st.caption("FRAUDGUARD / ENGINE V2")

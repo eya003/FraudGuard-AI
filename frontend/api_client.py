@@ -49,6 +49,15 @@ def get_import_summary(import_id: str, **filters) -> dict:
     return _get_json(f"/api/v1/imports/{import_id}/summary", params=params, timeout=120)
 
 
+def get_public_demo_summary() -> dict:
+    return _get_json("/api/v1/public-demo/summary", timeout=15)
+
+
+def get_public_demo_sample(**filters) -> dict:
+    params = {key: value for key, value in filters.items() if value not in (None, "")}
+    return _get_json("/api/v1/public-demo/sample", params=params, timeout=30)
+
+
 def get_import_table(import_id: str, **filters) -> dict:
     params = {key: value for key, value in filters.items() if value not in (None, "")}
     return _get_json(f"/api/v1/imports/{import_id}/table", params=params, timeout=120)

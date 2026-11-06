@@ -30,6 +30,15 @@ selected = st.selectbox(
     imports,
     format_func=lambda item: f"{item['filename']} · {item['row_count']:,} lignes",
 )
+available_scores = [column for column in selected.get("columns", [])
+                    if str(column).strip().lower() in {"score", "fraud_score"}
+                    or str(column).strip().lower().startswith("score_")]
+if not available_scores:
+    st.warning("Aucune colonne de score détectée. Importez l'export Kaggle multi-modèles Validation.")
+    st.stop()
+default_score = next((c for c in available_scores if str(c).strip().lower() == "score"), available_scores[0])
+score_column = st.selectbox("Modèle / colonne de score", available_scores,
+                           index=available_scores.index(default_score))
 try:
     operational = get_risk_defaults()
 except (requests.RequestException, ValueError):
@@ -56,6 +65,7 @@ if run:
                 daily_budget=budget,
                 cost_per_alert=cost,
                 method=method,
+                score_column=score_column,
             )
         except ValueError as exc:
             st.session_state.pop("risk_sim_result", None)
@@ -64,7 +74,7 @@ if run:
             st.error("FastAPI est indisponible.")
 
 result = st.session_state.get("risk_sim_result")
-if result and result["source_import_id"] == selected["id"]:
+if result and result["source_import_id"] == selected["id"] and result.get("score_column") == score_column:
     st.caption(f"Source : {result['source_split']} · Méthode : {result['method']}")
     cards = st.columns(5)
     cards[0].metric("Alertes", f"{result['alerts']:,}".replace(",", " "))

@@ -2,10 +2,10 @@
 
 ## Avant de publier
 
-1. **Ne publie pas** `.venv/`, `.env`, les transactions, les exports Kaggle, `data/*.sqlite3`, `data/uploads/` ni `data/experiments/`. Le `.gitignore` fourni les exclut.
+1. **Ne publie pas** `.venv/`, `.env`, le CSV complet, les exports Train/Validation, `data/*.sqlite3`, `data/uploads/` ni `data/experiments/`. Les petits agrégats et l'échantillon pseudonymisé `data/public_demo/` sont prévus pour le dépôt.
 2. Le seul modèle pré-entraîné à versionner est `models/random_forest_pipeline_v2.joblib` avec `models/config.json`. Vérifier les droits d'utilisation des données et des artefacts.
 3. Exécuter les tests sous **Python 3.11, scikit-learn 1.6.1**. Le joblib du notebook n'est pas compatible avec toutes les versions de scikit-learn.
-4. Configurer un mot de passe de démonstration `APP_ACCESS_PASSWORD` si l'application est exposée publiquement. L'API est liée à `127.0.0.1` dans le conteneur et ne doit pas être exposée directement.
+4. L'application est publique sans compte. Les limites d'entraînement et d'upload sont donc activées côté API. Ne déployez pas d'endpoint d'écriture sans contrôle d'abus supplémentaire.
 
 ## Démarrage local — Windows
 
@@ -20,24 +20,23 @@ Copy-Item .env.example .env
 .\.venv\Scripts\python.exe -m streamlit run frontend/app.py
 ```
 
-## Déploiement public — conteneur sur Render / Railway / autre hébergeur Docker
+## Déploiement public — Streamlit Community Cloud + Render
 
-Un **seul service Docker** démarre FastAPI en privé (`127.0.0.1:8000`) et Streamlit sur `$PORT` (`0.0.0.0`). Le Dockerfile installe les dépendances du laboratoire et de SHAP. L'hébergeur doit accepter Docker et fournir suffisamment de RAM pour le modèle et les traitements sélectionnés.
+Le dépôt fournit également un Dockerfile combiné. Pour le déploiement demandé, utilisez Streamlit Community Cloud pour le frontend et un Web Service Render séparé pour FastAPI.
 
-1. Créer un nouveau dépôt GitHub et pousser les sources en excluant les données et secrets.
-2. Créer un service **Web Service / Docker** depuis ce dépôt sur ton hébergeur.
-3. Définir les variables `APP_ACCESS_PASSWORD`, `MAX_UPLOAD_MB` (facultatif), `PROJECT_REPO_URL`, `PROJECT_DEMO_URL`, `PROJECT_NOTEBOOK_URL`, `PROJECT_DATA_URL`. Ne pas exposer FastAPI sur un port public.
-4. Définir `HISTORY_DB_PATH=/app/data/fraudguard_history.sqlite3` et `UPLOAD_DIR=/app/data/uploads`. **Pour conserver les données entre redéploiements, monter un volume persistant sur `/app/data`**. Sans volume, les imports, expériences et quotas seront perdus au redémarrage.
-5. Tester le chemin `/` (Streamlit) ; localement l'API répond sur `/health` sur le port 8000 du conteneur.
-6. Renseigner les URLs de la page « À propos & liens » via variables d'environnement.
+1. Déployer le dépôt GitHub sur Render en tant que Python Web Service. Build command : `pip install -r requirements.txt && pip install -r requirements-optional.txt`. Start command : `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`.
+2. Définir `MAX_UPLOAD_MB=25`, `HISTORY_DB_PATH=/opt/render/project/src/data/fraudguard_history.sqlite3`, `UPLOAD_DIR=/opt/render/project/src/data/uploads` et `EXPERIMENT_DIR` si utilisé. Le CSV brut n'est pas nécessaire aux vues Dashboard/Data Explorer du déploiement public.
+3. Dans Streamlit Community Cloud, choisir `frontend/app.py` comme fichier principal et ajouter `API_BASE_URL=https://<service-render>.onrender.com` dans les secrets. Les GET publics utilisent les agrégats statiques.
+4. Configurer `/health` comme health check Render. Les instances gratuites s'endorment après inactivité et le système de fichiers est éphémère; les changements SQLite, imports, alertes et expériences sont perdus au redémarrage/sommeil. Un stockage durable nécessite un service payant avec disque ou une base de données durable.
+5. Le budget d'alertes est conforme à la configuration V2 pendant la vie du processus, mais SQLite sur Free ne garantit pas sa persistance après redémarrage. N'utilisez pas ce plan pour des alertes opérationnelles persistantes.
 
 ### Datasets & limites du cloud
 
-Le jeu Sparkov complet (~1,85 M lignes) **n'est pas versionné dans Git**. Pour le charger automatiquement, le copier sur un volume sous `/app/data/dataset/sparkov_transactions.csv` ou définir `DATASET_PATH` pointant vers son chemin local. Un CSV de plusieurs centaines de Mo n'est pas adapté à un push GitHub ou à un stockage éphémère de petit conteneur.
+Le jeu Sparkov complet (~1,85 M lignes) **n'est pas versionné dans Git**. Le script `scripts/export_public_dataset.py` produit `data/public_demo/summary.json` avec les agrégats exacts du CSV complet et `sample.csv.gz` avec un échantillon déterministe réel. Ces petits fichiers sont servis sans le CSV brut, ce qui convient au système de fichiers éphémère Render. En local, `DATASET_PATH` déclenche l'enregistrement automatique du fichier brut au démarrage.
 
-Importer également les exports Kaggle `fraudguard_train_val_features_v2.csv` et `fraudguard_v2_validation_scores.csv` (générés par les scripts présents dans `docs/`) pour les entraînements et le simulateur. Ces données ne sont **pas** incluses dans le dépôt ; sans elles, les pages restent visibles mais affichent les données manquantes au lieu d'inventer des résultats.
+Pour les entraînements, importer `fraudguard_train_val_features_v2.csv`. Pour les scores Validation du Risk Simulator, importer `fraudguard_v2_validation_scores.csv`. Pour disposer des scores des variantes initiales/rééquilibrées/optimisées du notebook, importer `fraudguard_v2_validation_model_scores.csv.gz`, exporté par `docs/kaggle_export_validation_comparison_v2.py`. L'échantillon SHAP XGBoost groupé est exporté par `docs/kaggle_export_xgb_shap_reference_v2.py` sous `fraudguard_v2_xgb_shap_validation_sample.csv.gz`. Ces fichiers Kaggle ne sont **pas** inclus dans le dépôt ; sans eux, les pages affichent les données manquantes plutôt que des résultats inventés.
 
-Le laboratoire exécute un entraînement à la fois dans le processus API. Les tâches en cours peuvent être interrompues lors d'un redéploiement ; choisir une machine disposant d'assez de CPU/RAM et éviter de lancer de gros jobs sur un hébergement gratuit.
+Le laboratoire limite l'échantillon Train à 100 000 lignes, les estimateurs à 300 et conserve un seul entraînement actif. Les tâches peuvent être interrompues au redémarrage; le niveau Free peut manquer de mémoire pour de grands jeux de Validation.
 
 ### GitHub Pages — vitrine statique
 
@@ -50,4 +49,4 @@ Le laboratoire exécute un entraînement à la fois dans le processus API. Les t
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Effectuer une seule validation manuelle : Import → EDA → Train/Validation dans ML Laboratory → Model Comparison → Risk Simulator (Validation) → Transaction Tester (preview) → SHAP → Alert Center (record) → À propos & liens.
+Vérifier les lectures publiques : `/health`, `/api/v1/public-demo/summary`, `/api/v1/public-demo/sample`, puis l'interface Streamlit. Les expériences et scores Validation exigent toujours les exports Kaggle indiqués ci-dessus.

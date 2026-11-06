@@ -2,7 +2,9 @@ import pandas as pd
 import requests
 import streamlit as st
 
-from frontend.api_client import get_alert_summary, get_health, get_import_summary, get_imports
+from frontend.api_client import (get_alert_summary, get_health, get_import_summary,
+                                 get_imports, get_public_demo_summary)
+from frontend.public_demo import render_public_dashboard
 
 try:
     import plotly.express as px
@@ -95,8 +97,12 @@ if summary:
             else:
                 st.bar_chart(hours.set_index("hour")[["frauds"]])
 else:
-    st.info("Importez un CSV pour afficher les indicateurs descriptifs; aucune statistique n'est simulée.")
-    st.metric("Alertes UTC aujourd'hui", alert_summary["alerts_today"])
+    try:
+        public_summary = get_public_demo_summary()
+        render_public_dashboard(public_summary, alerts_today=alert_summary["alerts_today"])
+    except (ValueError, requests.RequestException) as exc:
+        st.info(f"Statistiques Sparkov indisponibles : {exc}")
+        st.metric("Alertes UTC aujourd'hui", alert_summary["alerts_today"])
 
 st.subheader("État opérationnel")
 api_col, model_col, total_alert_col, decision_col = st.columns(4)
@@ -104,7 +110,16 @@ api_col.metric("FastAPI", health["status"])
 model_col.metric("Modèle par défaut", "Random Forest V2")
 total_alert_col.metric("Alertes persistées", alert_summary["total_alerts"])
 decision_col.write("Décisions d'alerte :")
-decision_col.json(alert_summary["outcomes"], expanded=False)
+outcomes = alert_summary.get("outcomes") or {}
+if outcomes:
+    decision_col.dataframe(
+        pd.DataFrame([{"Decision": name, "Count": count}
+                      for name, count in sorted(outcomes.items())]),
+        hide_index=True,
+        width="stretch",
+    )
+else:
+    decision_col.caption("No alerts recorded today.")
 st.caption(
     "Les alertes sont créées uniquement en mode record. Preview et simulateur ne modifient pas les quotas."
 )

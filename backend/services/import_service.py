@@ -22,7 +22,8 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "data/uploads"))
 if not UPLOAD_DIR.is_absolute():
     UPLOAD_DIR = ROOT_DIR / UPLOAD_DIR
-MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_MB", "1024")) * 1024 * 1024
+# Keep public demo uploads small by default; self-hosters may raise this value.
+MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_MB", "25")) * 1024 * 1024
 CHUNK_SIZE = 50_000
 TIME_NAMES = ("trans_date_trans_time", "timestamp", "date", "datetime")
 SPLIT_NAMES = ("_split", "split")
@@ -50,7 +51,8 @@ def _persist_csv(filename: str, source: BinaryIO) -> dict:
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     import_id = str(uuid.uuid4())
     safe_name = _safe_filename(filename)
-    temporary_path = UPLOAD_DIR / f"{import_id}.uploading"
+    temporary_suffix = ".uploading.csv.gz" if safe_name.lower().endswith(".csv.gz") else ".uploading.csv"
+    temporary_path = UPLOAD_DIR / f"{import_id}{temporary_suffix}"
     final_path = UPLOAD_DIR / f"{import_id}_{safe_name}"
     size = 0
     try:
@@ -194,7 +196,7 @@ def _import_paths(import_id: str) -> tuple[Path, Path]:
     if not re.fullmatch(r"[0-9a-fA-F-]{36}", import_id):
         raise FileNotFoundError("Import CSV introuvable.")
     metadata = UPLOAD_DIR / f"{import_id}.json"
-    csv_path = next(UPLOAD_DIR.glob(f"{import_id}_*.csv"), None)
+    csv_path = next(UPLOAD_DIR.glob(f"{import_id}_*.csv*"), None)
     if not metadata.is_file() or csv_path is None:
         raise FileNotFoundError("Import CSV introuvable.")
     return metadata, csv_path

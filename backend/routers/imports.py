@@ -20,8 +20,9 @@ def get_imports() -> dict:
 
 @router.post("")
 async def create_import(file: UploadFile = File(...)) -> dict:
-    if not file.filename or not file.filename.lower().endswith(".csv"):
-        raise HTTPException(status_code=400, detail="Veuillez sélectionner un fichier .csv.")
+    if not file.filename or not (file.filename.lower().endswith(".csv")
+                                  or file.filename.lower().endswith(".csv.gz")):
+        raise HTTPException(status_code=400, detail="Veuillez sélectionner un fichier .csv ou .csv.gz.")
     try:
         return await run_in_threadpool(save_csv_stream, file.filename, file.file)
     except TransactionImportError as exc:

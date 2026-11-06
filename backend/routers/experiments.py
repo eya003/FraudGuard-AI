@@ -14,7 +14,7 @@ class ExperimentRequest(BaseModel):
     algorithm: Literal["logistic_regression", "random_forest", "xgboost", "isolation_forest", "autoencoder"]
     params: dict = Field(default_factory=dict)
     class_weight: Literal["none", "balanced", "balanced_subsample"] = "balanced"
-    sample_limit: int | None = Field(default=20_000, ge=100, le=500_000)
+    sample_limit: int | None = Field(default=20_000, ge=100, le=100_000)
     threshold: float = Field(default=0.5, ge=0, le=1)
     smotenc: bool = False
     cv_folds: int = Field(default=0, ge=0, le=5)
