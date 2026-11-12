@@ -62,5 +62,5 @@ def apply_theme() -> None:
 def hero() -> None:
     st.markdown('''<div class="fg-hero"><div class="fg-brand">◈ FRAUDGUARD <span style="color:#6de8d8">AI</span></div>
     <div class="fg-kicker">TRANSACTION INTELLIGENCE · FINANCIAL RISK STUDIO</div>
-    <small>Exploration des données · Laboratoire de modèles · Décisions explicables</small></div>''',
+    <small>Exploration des données · Comparaison des modèles · Décisions explicables</small></div>''',
     unsafe_allow_html=True)

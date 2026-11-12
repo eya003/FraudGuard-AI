@@ -1,4 +1,5 @@
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile
+from backend.services.demo_policy import require_local_write_mode
 from fastapi.concurrency import run_in_threadpool
 
 from backend.services.import_service import ImportError as TransactionImportError
@@ -20,9 +21,9 @@ def get_imports() -> dict:
 
 @router.post("")
 async def create_import(file: UploadFile = File(...)) -> dict:
-    if not file.filename or not (file.filename.lower().endswith(".csv")
-                                  or file.filename.lower().endswith(".csv.gz")):
-        raise HTTPException(status_code=400, detail="Veuillez sélectionner un fichier .csv ou .csv.gz.")
+    require_local_write_mode()
+    if not file.filename or not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Veuillez sélectionner un fichier .csv.")
     try:
         return await run_in_threadpool(save_csv_stream, file.filename, file.file)
     except TransactionImportError as exc:

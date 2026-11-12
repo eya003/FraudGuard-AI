@@ -4,6 +4,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException
+from backend.services.demo_policy import require_local_write_mode
 from pydantic import BaseModel, Field
 
 from backend.repositories.history_repository import DuplicateTransactionError
@@ -26,6 +27,7 @@ def engineer_features(
     request: FeatureEngineeringRequest,
     service: FeatureService = Depends(get_feature_service),
 ) -> dict:
+    require_local_write_mode()
     try:
         result = service.transform_and_persist(pd.DataFrame(request.transactions))
     except (DuplicateTransactionError, ValueError) as exc:

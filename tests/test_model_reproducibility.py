@@ -14,6 +14,10 @@ ABSOLUTE_TOLERANCE = 1e-10
 RELATIVE_TOLERANCE = 1e-7
 
 
+@unittest.skipUnless(
+    REFERENCE_PATH.is_file(),
+    "Les 100 scores Kaggle de référence sont un export local non publié ; test ignoré en CI publique.",
+)
 class ModelReproducibilityTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
