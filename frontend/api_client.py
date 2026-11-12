@@ -18,6 +18,9 @@ def _post(endpoint:str,payload:dict,timeout:int=50)->dict:
 def score_precomputed_features(trans_num:str,features:dict)->dict:
     return _post('/api/v1/transactions/score-features',{'trans_num':trans_num,'features':features})
 
+def score_transaction(transaction:dict,mode:str='preview')->dict:
+    return _post('/api/v1/transactions/score',{'transaction':transaction,'mode':mode})
+
 def get_global_importance()->dict:
     response=requests.get(f'{API_BASE_URL}/api/v1/explanations/global-importance',timeout=20)
     response.raise_for_status()
