@@ -2,6 +2,7 @@ from functools import lru_cache
 import json
 
 from fastapi import APIRouter, HTTPException, Query
+from backend.services.demo_policy import require_local_write_mode
 from pydantic import BaseModel
 
 from backend.repositories.alert_repository import ALERT_STATUSES, SQLiteAlertRepository
@@ -45,6 +46,7 @@ def alert_summary(date: str = "") -> dict:
 
 @router.patch("/{alert_id}/status")
 def update_alert_status(alert_id: str, request: AlertStatusRequest) -> dict:
+    require_local_write_mode()
     try:
         return get_alert_repository().update_status(alert_id, request.status)
     except ValueError as exc:

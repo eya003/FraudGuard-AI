@@ -7,6 +7,8 @@ from pydantic import BaseModel, Field
 
 from backend.repositories.history_repository import DuplicateTransactionError
 from backend.services.scoring_service import ScoringService, get_scoring_service
+from backend.services.demo_policy import require_local_write_mode
+from backend.services.precomputed_scoring import score_precomputed_features
 
 router = APIRouter(prefix="/transactions", tags=["scoring"])
 
@@ -21,6 +23,8 @@ def score_transaction(
     request: TransactionScoreRequest,
     service: ScoringService = Depends(get_scoring_service),
 ) -> dict:
+    if request.mode == "record":
+        require_local_write_mode()
     try:
         return service.score(request.transaction, mode=request.mode)
     except (DuplicateTransactionError, ValueError) as exc:
@@ -40,4 +44,23 @@ def score_with_experiment(request: ExperimentalScoreRequest) -> dict:
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except (ValueError, DuplicateTransactionError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+class PrecomputedScoreRequest(BaseModel):
+    trans_num: str
+    features: dict[str, Any]
+
+
+@router.post("/score-features")
+def score_from_precomputed_features(
+    request: PrecomputedScoreRequest,
+    service: ScoringService = Depends(get_scoring_service),
+) -> dict:
+    """No write, no labels, no history reconstruction, never replaces the operational pipeline."""
+    try:
+        return score_precomputed_features(
+            service.model, service.config, request.features, request.trans_num
+        )
+    except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

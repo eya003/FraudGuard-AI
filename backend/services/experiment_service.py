@@ -30,8 +30,6 @@ from backend.services.anomaly_models import AnomalyExperiment
 EXPERIMENT_DIR = PROJECT_ROOT / "data" / "experiments"
 _executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="fraudguard-ml")
 _lock = threading.Lock()
-_enqueue_lock = threading.Lock()
-MAX_TRAIN_SAMPLE = 100_000
 _numeric = [c for c in FEATURE_COLUMNS if c != "category"]
 
 
@@ -103,14 +101,6 @@ def _read_splits(import_id: str, sample_limit: int | None, *, chronological: boo
 
 def _model(algorithm: str, params: dict, class_weight: str, seed: int, feature_columns=None):
     feature_columns = list(feature_columns or FEATURE_COLUMNS)
-    n_estimators = int(params.get("n_estimators", 100))
-    max_depth = params.get("max_depth", 12)
-    if algorithm in {"random_forest", "xgboost", "isolation_forest"} and not 10 <= n_estimators <= 300:
-        raise ValueError("Limite publique : n_estimators doit être compris entre 10 et 300.")
-    if algorithm in {"random_forest", "xgboost"} and max_depth is not None and not 1 <= int(max_depth) <= 24:
-        raise ValueError("Limite publique : max_depth doit être compris entre 1 et 24.")
-    if algorithm == "autoencoder" and not 5 <= int(params.get("max_iter", 35)) <= 50:
-        raise ValueError("Limite publique : l'Autoencoder accepte 5 à 50 itérations.")
     if algorithm == "logistic_regression":
         estimator = LogisticRegression(
             C=float(params.get("C", 1.0)), max_iter=int(params.get("max_iter", 300)),
@@ -119,8 +109,8 @@ def _model(algorithm: str, params: dict, class_weight: str, seed: int, feature_c
         )
     elif algorithm == "random_forest":
         estimator = RandomForestClassifier(
-            n_estimators=n_estimators,
-            max_depth=max_depth,
+            n_estimators=int(params.get("n_estimators", 100)),
+            max_depth=params.get("max_depth", 12),
             min_samples_leaf=int(params.get("min_samples_leaf", 2)),
             max_features=float(params.get("max_features", 1.0)),
             max_samples=float(params["max_samples"]) if params.get("max_samples") else None,
@@ -133,8 +123,8 @@ def _model(algorithm: str, params: dict, class_weight: str, seed: int, feature_c
         except ImportError as exc:
             raise ValueError("XGBoost n'est pas installé dans l'environnement Python.") from exc
         estimator = XGBClassifier(
-            n_estimators=n_estimators,
-            max_depth=int(max_depth or 6),
+            n_estimators=int(params.get("n_estimators", 150)),
+            max_depth=int(params.get("max_depth", 6)),
             learning_rate=float(params.get("learning_rate", 0.1)),
             scale_pos_weight=float(params.get("scale_pos_weight", 1.0)),
             min_child_weight=int(params.get("min_child_weight", 1)),
@@ -280,8 +270,8 @@ def start_experiment(import_id: str, *, algorithm: str, params: dict,
                      feature_columns: list[str] | None = None) -> dict:
     if class_weight not in {"none", "balanced", "balanced_subsample"}:
         raise ValueError("Pondération de classes invalide.")
-    if sample_limit is not None and not 100 <= sample_limit <= MAX_TRAIN_SAMPLE:
-        raise ValueError(f"L'échantillon Train doit être entre 100 et {MAX_TRAIN_SAMPLE:,} lignes.")
+    if sample_limit is not None and not 100 <= sample_limit <= 500_000:
+        raise ValueError("L'échantillon doit être entre 100 et 500 000 lignes.")
     feature_columns = list(FEATURE_COLUMNS) if feature_columns is None else list(feature_columns)
     if (not feature_columns or len(set(feature_columns)) != len(feature_columns)
             or any(c not in FEATURE_COLUMNS for c in feature_columns)):
@@ -299,15 +289,11 @@ def start_experiment(import_id: str, *, algorithm: str, params: dict,
         raise ValueError("TimeSeriesSplit accepte de 0 à 5 folds.")
     if not 0 <= threshold <= 1:
         raise ValueError("Le seuil doit être dans [0, 1].")
-    with _enqueue_lock:
-        active = [job for job in list_experiments() if job.get("status") in {"queued", "running"}]
-        if active:
-            raise ValueError("Un entraînement est déjà en cours; réessayez après sa fin.")
-        job = {"id": str(uuid.uuid4()), "status": "queued", "created_at": datetime.now(timezone.utc).isoformat(),
-               "algorithm": algorithm, "import_id": import_id}
-        _save_job(job)
-        _executor.submit(_execute, job, import_id, algorithm, params, class_weight,
-                         sample_limit, threshold, smotenc, cv_folds, feature_columns)
+    job = {"id": str(uuid.uuid4()), "status": "queued", "created_at": datetime.now(timezone.utc).isoformat(),
+           "algorithm": algorithm, "import_id": import_id}
+    _save_job(job)
+    _executor.submit(_execute, job, import_id, algorithm, params, class_weight,
+                     sample_limit, threshold, smotenc, cv_folds, feature_columns)
     return job
 
 

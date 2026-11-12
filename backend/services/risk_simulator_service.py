@@ -19,9 +19,12 @@ from sklearn.metrics import (
 from backend.services.import_service import CHUNK_SIZE, ImportError, _import_paths
 
 
-def _load_validation(import_id: str, score_column: str | None = None) -> pd.DataFrame:
+def _load_validation(import_id: str, score_column: str | None = None) -> tuple[pd.DataFrame, str]:
     _, path = _import_paths(import_id)
     parts = []
+    selected_score_column = score_column.strip() if isinstance(score_column, str) else None
+    if selected_score_column == "":
+        raise ImportError("Le nom de colonne de score ne peut pas être vide.")
     for chunk in pd.read_csv(path, chunksize=CHUNK_SIZE):
         cols = {str(c).strip().lower(): c for c in chunk.columns}
         split_col = cols.get("split", cols.get("_split"))
@@ -37,13 +40,16 @@ def _load_validation(import_id: str, score_column: str | None = None) -> pd.Data
             if source is None:
                 raise ImportError(f"Colonne requise pour la simulation : {names[0]}.")
             return source
-        selected_score = (cols.get(score_column.strip().lower()) if score_column else
-                          cols.get("score", cols.get("fraud_score")))
-        if selected_score is None:
-            raise ImportError(f"Colonne de score absente : {score_column or 'score'}.")
+        if selected_score_column is None:
+            score_col = col("score", "fraud_score")
+            selected_score_column = str(score_col)
+        else:
+            score_col = cols.get(selected_score_column.lower())
+            if score_col is None:
+                raise ImportError(f"Colonne de score introuvable : {selected_score_column}.")
         parts.append(pd.DataFrame({
             "timestamp": pd.to_datetime(validation[col("timestamp", "trans_date_trans_time", "date")], errors="coerce"),
-            "score": pd.to_numeric(validation[selected_score], errors="coerce"),
+            "score": pd.to_numeric(validation[score_col], errors="coerce"),
             "y_true": pd.to_numeric(validation[col("is_fraud", "y_true", "label")], errors="coerce"),
             "amount": pd.to_numeric(validation[col("amt", "amount")], errors="coerce"),
         }))
@@ -58,7 +64,7 @@ def _load_validation(import_id: str, score_column: str | None = None) -> pd.Data
         raise ImportError("La Validation doit contenir les deux classes pour calculer les AUC.")
     if not frame["score"].between(0, 1).all():
         raise ImportError("Les scores doivent être compris entre 0 et 1.")
-    return frame
+    return frame, selected_score_column or "score"
 
 
 def _evaluate(frame: pd.DataFrame, threshold: float, budget: int, cost: float, method: str) -> dict:
@@ -116,7 +122,7 @@ def run_simulation(
         raise ImportError("Le coût par alerte doit être un nombre positif.")
     if method not in {"topk_batch", "chronological"}:
         raise ImportError("Mode attendu : topk_batch ou chronological.")
-    frame = _load_validation(import_id, score_column=score_column)
+    frame, selected_score_column = _load_validation(import_id, score_column)
     result = _evaluate(frame, threshold, daily_budget, cost_per_alert, method)
     # A labeled Validation threshold sweep supports the precision/recall/cost trade-off chart.
     candidates = np.unique(np.quantile(frame["score"], np.linspace(0, 1, 31)))
@@ -133,8 +139,8 @@ def run_simulation(
         "method": method,
         "source_split": "Validation",
         "source_import_id": import_id,
-        "score_column": score_column or "score",
         "threshold": threshold,
         "cost_per_alert": cost_per_alert,
+        "score_column": selected_score_column,
         "threshold_curve": curve,
     }

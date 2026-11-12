@@ -15,7 +15,6 @@ class RiskSimulationRequest(BaseModel):
     daily_budget: int = Field(ge=0, le=100_000)
     cost_per_alert: float = Field(ge=0)
     method: Literal["topk_batch", "chronological"]
-    score_column: str | None = None
 
 
 @router.get("/defaults")
@@ -34,7 +33,6 @@ def simulate_risk(import_id: str, request: RiskSimulationRequest) -> dict:
             daily_budget=request.daily_budget,
             cost_per_alert=request.cost_per_alert,
             method=request.method,
-            score_column=request.score_column,
         )
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

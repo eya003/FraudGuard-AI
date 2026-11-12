@@ -5,9 +5,12 @@ __pycache__
 .env
 data/uploads/
 data/experiments/
-data/dataset/
+# Ship the verified 23 KB EDA aggregates, not any raw Sparkov data.
+data/dataset/*
+!data/dataset/eda_aggregates_v1/
+data/dataset/eda_aggregates_v1/*
+!data/dataset/eda_aggregates_v1/fraudguard_eda_aggregates_v1.json
 data/kaggle_reference_v2/
-data/reference_predictions_v2.csv
 data/*.sqlite3*
 *.zip
 *.ipynb
